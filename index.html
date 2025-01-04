@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Military Service Tracker</title>
     <style>
         body {
@@ -9,23 +10,25 @@
             background-color: #f0f4f7;
             color: #333;
             text-align: center;
-            padding: 50px;
+            margin: 0;
+            padding: 0;
         }
         .container {
             background-color: #fff;
-            padding: 30px;
+            margin: 20px auto;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: inline-block;
-            max-width: 600px;
-            width: 100%;
+            max-width: 90%;
+            width: 500px;
         }
         h1 {
             margin-bottom: 20px;
+            font-size: 1.8em;
         }
         .info {
-            margin: 15px 0;
-            font-size: 1.2em;
+            margin: 10px 0;
+            font-size: 1.1em;
         }
         #progressContainer {
             background-color: #e0e0e0;
@@ -61,10 +64,11 @@
             color: #888;
         }
         #settingsIcon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            position: fixed;
+            top: 15px;
+            right: 15px;
             cursor: pointer;
+            z-index: 1000;
         }
         #settingsModal {
             display: none;
@@ -76,7 +80,9 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            z-index: 1001;
+            max-width: 90%;
+            width: 400px;
         }
         #overlay {
             display: none;
@@ -86,10 +92,26 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
+            z-index: 1000;
         }
-        #languageSelector {
+        #languageSelector, #startDateInput, #endDateInput {
+            width: 100%;
             margin-top: 10px;
+            padding: 8px;
+            font-size: 1em;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -100,16 +122,13 @@
     <h3>Settings</h3>
     <label for="startDateInput">Start Date:</label>
     <input type="datetime-local" id="startDateInput">
-    <br><br>
     <label for="endDateInput">End Date:</label>
     <input type="datetime-local" id="endDateInput">
-    <br><br>
     <label for="languageSelector">Language:</label>
     <select id="languageSelector">
         <option value="en">English</option>
         <option value="ko">Korean</option>
     </select>
-    <br><br>
     <button id="saveSettings">Save</button>
     <button id="closeSettings">Cancel</button>
 </div>
@@ -136,7 +155,7 @@
     </div>
 
     <div class="footer">
-        Last updated: <span id="lastUpdated">Loading...</span> </br>
+        Last updated: <span id="lastUpdated">Loading...</span> <br>
         Made by: @wonjongbot
     </div>
 </div>
