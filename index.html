@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Military Service Tracker</title>
+    <title>Military Service Tracker</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -94,11 +94,21 @@
             background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
-        #languageSelector, #startDateInput, #endDateInput {
+        .settings-field {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1em;
+            font-weight: bold;
+        }
+        input, select {
             width: 100%;
-            margin-top: 10px;
+            box-sizing: border-box; /* Ensures consistent sizing */
             padding: 8px;
             font-size: 1em;
+            margin: 0;
         }
         button {
             margin-top: 10px;
@@ -109,6 +119,7 @@
             background-color: #4caf50;
             color: white;
             cursor: pointer;
+            width: 100%;
         }
         button:hover {
             background-color: #45a049;
@@ -119,16 +130,22 @@
 
 <div id="overlay"></div>
 <div id="settingsModal">
-    <h3>Settings</h3>
-    <label for="startDateInput">Start Date:</label>
-    <input type="datetime-local" id="startDateInput">
-    <label for="endDateInput">End Date:</label>
-    <input type="datetime-local" id="endDateInput">
-    <label for="languageSelector">Language:</label>
-    <select id="languageSelector">
-        <option value="en">English</option>
-        <option value="ko">Korean</option>
-    </select>
+    <h3 id="settings">Settings</h3>
+    <div class="settings-field">
+        <label for="startDateInput" id="startDate">Start Date:</label>
+        <input type="date" id="startDateInput">
+    </div>
+    <div class="settings-field">
+        <label for="endDateInput" id="endDate">End Date:</label>
+        <input type="date" id="endDateInput">
+    </div>
+    <div class="settings-field">
+        <label for="languageSelector" id="lang">Language:</label>
+        <select id="languageSelector">
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+        </select>
+    </div>
     <button id="saveSettings">Save</button>
     <button id="closeSettings">Cancel</button>
 </div>
@@ -136,7 +153,7 @@
 <img id="settingsIcon" src="https://img.icons8.com/ios-glyphs/30/000000/settings.png" alt="Settings">
 
 <div class="container">
-    <h1 id="headerTitle">My Military Service Tracker</h1>
+    <h1 id="headerTitle">Pedro's Military Service Tracker</h1>
     <div class="info" id="totalDays">Total Service Duration: Calculating...</div>
     <div class="info" id="daysRemaining">Days Remaining: Calculating...</div>
     <div class="info" id="percentageCompleted">Percentage Completed: Calculating...</div>
@@ -163,7 +180,11 @@
 <script>
     const texts = {
         en: {
-            headerTitle: "My Military Service Tracker",
+            settings: "settings",
+            startDate: "Enlistment date",
+            endDate: "Discharge date",
+            lang: "언어",
+            headerTitle: "Pedro's Military Service Tracker",
             totalDays: "Total Service Duration: ",
             daysRemaining: "Days Remaining: ",
             percentageCompleted: "Percentage Completed: ",
@@ -173,6 +194,10 @@
             cctvShiftsLeft: "CCTV Shifts Left: "
         },
         ko: {
+            settings: "설정",
+            startDate: "입대일",
+            endDate: "전역일",
+            lang: "언어",
             headerTitle: "군돌이 온라인",
             totalDays: "총 복무 기간: ",
             daysRemaining: "남은 일수: ",
@@ -203,7 +228,36 @@
     let startDate = new Date('2023-09-18T08:30:00');
     let endDate = new Date('2025-03-17T08:30:00');
 
+    function getDateWithTime(dateString) {
+        return new Date(`${dateString}T08:30:00`);
+    }
+
+    function formatDateToInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+    }
+
+    function setDefaultInputValues() {
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        const languageSelector = document.getElementById('languageSelector');
+
+        // Set default values for start and end dates
+        startDateInput.value = formatDateToInput(startDate);
+        endDateInput.value = formatDateToInput(endDate);
+
+        // Set default language
+        languageSelector.value = currentLanguage;
+    }
+
     function updateText() {
+        document.getElementById('settings').innerText = texts[currentLanguage].settings;
+        document.getElementById('startDate').innerText = texts[currentLanguage].startDate;
+        document.getElementById('endDate').innerText = texts[currentLanguage].endDate;
+        document.getElementById('lang').innerText = texts[currentLanguage].lang;
+
         document.getElementById('headerTitle').innerText = texts[currentLanguage].headerTitle;
         document.getElementById('totalDays').innerText = texts[currentLanguage].totalDays + calculateTotalDays() + ` ${units[currentLanguage].days}`;
         document.getElementById('daysRemaining').innerText = texts[currentLanguage].daysRemaining + Math.floor(calculateDaysRemaining()) + ` ${units[currentLanguage].days}`;
@@ -256,17 +310,15 @@
         updateText();
         updateProgressBar();
         updateStats();
-        requestAnimationFrame(updateAll); // Continuously call the update loop
+        requestAnimationFrame(updateAll); // High-frequency loop
     }
 
 
     document.getElementById('settingsIcon').addEventListener('click', () => {
+        setDefaultInputValues(); // Correctly set default values
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
-        document.getElementById('startDateInput').value = startDate.toISOString().slice(0, 16);
-        document.getElementById('endDateInput').value = endDate.toISOString().slice(0, 16);
-        document.getElementById('languageSelector').value = currentLanguage;
-    });
+    }); 
 
     document.getElementById('closeSettings').addEventListener('click', () => {
         document.getElementById('settingsModal').style.display = 'none';
@@ -278,13 +330,14 @@
         const newEndDate = document.getElementById('endDateInput').value;
         const newLanguage = document.getElementById('languageSelector').value;
 
-        if (newStartDate) startDate = new Date(newStartDate);
-        if (newEndDate) endDate = new Date(newEndDate);
+        if (newStartDate) startDate = getDateWithTime(newStartDate);
+        if (newEndDate) endDate = getDateWithTime(newEndDate);
         if (newLanguage) currentLanguage = newLanguage;
 
         document.getElementById('settingsModal').style.display = 'none';
         document.getElementById('overlay').style.display = 'none';
-        updateAll();
+
+        updateText(); // Update the text immediately
     });
 
     function formatNumber(num, decimalPlaces) {
@@ -301,6 +354,7 @@
         }
         updateText(); // Update the interface to the detected language
     }
+    setDefaultInputValues();
     detectLanguage();
     updateAll();
     setInterval(updateAll, 1000); // Refresh every second for real-time updates
