@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Military Service Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f7;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .info {
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+        #progressContainer {
+            background-color: #e0e0e0;
+            border-radius: 25px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 30px;
+            width: 100%;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.1s ease-in-out;
+        }
+        .additional-info {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #555;
+        }
+        .stats {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #555;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #888;
+        }
+        #settingsIcon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+        }
+        #settingsModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        #languageSelector {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="settingsModal">
+    <h3>Settings</h3>
+    <label for="startDateInput">Start Date:</label>
+    <input type="datetime-local" id="startDateInput">
+    <br><br>
+    <label for="endDateInput">End Date:</label>
+    <input type="datetime-local" id="endDateInput">
+    <br><br>
+    <label for="languageSelector">Language:</label>
+    <select id="languageSelector">
+        <option value="en">English</option>
+        <option value="ko">Korean</option>
+    </select>
+    <br><br>
+    <button id="saveSettings">Save</button>
+    <button id="closeSettings">Cancel</button>
+</div>
+
+<img id="settingsIcon" src="https://img.icons8.com/ios-glyphs/30/000000/settings.png" alt="Settings">
+
+<div class="container">
+    <h1 id="headerTitle">My Military Service Tracker</h1>
+    <div class="info" id="totalDays">Total Service Duration: Calculating...</div>
+    <div class="info" id="daysRemaining">Days Remaining: Calculating...</div>
+    <div class="info" id="percentageCompleted">Percentage Completed: Calculating...</div>
+    
+    <div id="progressContainer">
+        <div id="progressBar">0%</div>
+    </div>
+    
+    <div class="additional-info" id="additionalInfo">Time Remaining: Loading...</div>
+
+    <div class="stats" id="stats">
+        <h3>Stats</h3>
+        <p id="mealsLeft">Meals Left: Calculating...</p>
+        <p id="workdaysLeft">Workdays Left: Calculating...</p>
+        <p id="cctvShiftsLeft">CCTV Shifts Left: Calculating...</p>
+    </div>
+
+    <div class="footer">
+        Last updated: <span id="lastUpdated">Loading...</span> </br>
+        Made by: @wonjongbot
+    </div>
+</div>
+
+<script>
+    const texts = {
+        en: {
+            headerTitle: "My Military Service Tracker",
+            totalDays: "Total Service Duration: ",
+            daysRemaining: "Days Remaining: ",
+            percentageCompleted: "Percentage Completed: ",
+            additionalInfo: "Time Remaining: ",
+            mealsLeft: "Meals Left: ",
+            workdaysLeft: "Workdays Left: ",
+            cctvShiftsLeft: "CCTV Shifts Left: "
+        },
+        ko: {
+            headerTitle: "군돌이 온라인",
+            totalDays: "총 복무 기간: ",
+            daysRemaining: "남은 일수: ",
+            percentageCompleted: "군생활: ",
+            additionalInfo: "남은 시간: ",
+            mealsLeft: "남은 식사: ",
+            workdaysLeft: "남은 일과일: ",
+            cctvShiftsLeft: "남은 CCTV 근무: "
+        }
+    };
+
+    const units = {
+        en: {
+            days: "days",
+            hours: "hours",
+            minutes: "minutes",
+            seconds: "seconds"
+        },
+        ko: {
+            days: "일",
+            hours: "시간",
+            minutes: "분",
+            seconds: "초"
+        }
+    };
+
+    let currentLanguage = 'en';
+    let startDate = new Date('2023-09-18T08:30:00');
+    let endDate = new Date('2025-03-17T08:30:00');
+
+    function updateText() {
+        document.getElementById('headerTitle').innerText = texts[currentLanguage].headerTitle;
+        document.getElementById('totalDays').innerText = texts[currentLanguage].totalDays + calculateTotalDays() + ` ${units[currentLanguage].days}`;
+        document.getElementById('daysRemaining').innerText = texts[currentLanguage].daysRemaining + Math.floor(calculateDaysRemaining()) + ` ${units[currentLanguage].days}`;
+        document.getElementById('lastUpdated').innerText = new Date().toLocaleString();
+    }
+
+    function calculateTotalDays() {
+        return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+    }
+
+    function calculateDaysRemaining() {
+        return (endDate - new Date()) / (1000 * 60 * 60 * 24);
+    }
+
+    function calculatePercentage(start, now, end) {
+        const totalMilliseconds = end - start;
+        const elapsedMilliseconds = now - start;
+        return (elapsedMilliseconds / totalMilliseconds) * 100;
+    }
+
+    function updateProgressBar() {
+        const now = new Date();
+        const percentage = calculatePercentage(startDate, now, endDate);
+        const progressBar = document.getElementById('progressBar');
+        const percentageDisplay = formatNumber(percentage, 10);
+        progressBar.style.width = `${percentage}%`;
+        progressBar.innerText = `${percentageDisplay}%`;
+        document.getElementById('percentageCompleted').innerText = `${texts[currentLanguage].percentageCompleted}${percentageDisplay}%`;
+
+        const remainingMs = endDate - now;
+        const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+        document.getElementById('additionalInfo').innerText = `${texts[currentLanguage].additionalInfo}${days} ${units[currentLanguage].days}, ${hours} ${units[currentLanguage].hours}, ${minutes} ${units[currentLanguage].minutes}, ${seconds} ${units[currentLanguage].seconds}`;
+    }
+
+    function updateStats() {
+        const daysRemaining = Math.floor(calculateDaysRemaining());
+        const mealsLeft = daysRemaining * 3; // Assuming 3 meals per day
+        const workdaysLeft = daysRemaining; // Every day is a workday
+        const cctvShiftsLeft = Math.ceil(daysRemaining / 5); // CCTV shifts approximately every 5 days
+
+        document.getElementById('mealsLeft').innerText = `${texts[currentLanguage].mealsLeft}${mealsLeft}`;
+        document.getElementById('workdaysLeft').innerText = `${texts[currentLanguage].workdaysLeft}${workdaysLeft}`;
+        document.getElementById('cctvShiftsLeft').innerText = `${texts[currentLanguage].cctvShiftsLeft}${cctvShiftsLeft}`;
+    }
+
+    function updateAll() {
+        updateText();
+        updateProgressBar();
+        updateStats();
+        requestAnimationFrame(updateAll); // Continuously call the update loop
+    }
+
+
+    document.getElementById('settingsIcon').addEventListener('click', () => {
+        document.getElementById('settingsModal').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('startDateInput').value = startDate.toISOString().slice(0, 16);
+        document.getElementById('endDateInput').value = endDate.toISOString().slice(0, 16);
+        document.getElementById('languageSelector').value = currentLanguage;
+    });
+
+    document.getElementById('closeSettings').addEventListener('click', () => {
+        document.getElementById('settingsModal').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    });
+
+    document.getElementById('saveSettings').addEventListener('click', () => {
+        const newStartDate = document.getElementById('startDateInput').value;
+        const newEndDate = document.getElementById('endDateInput').value;
+        const newLanguage = document.getElementById('languageSelector').value;
+
+        if (newStartDate) startDate = new Date(newStartDate);
+        if (newEndDate) endDate = new Date(newEndDate);
+        if (newLanguage) currentLanguage = newLanguage;
+
+        document.getElementById('settingsModal').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+        updateAll();
+    });
+
+    function formatNumber(num, decimalPlaces) {
+        return num.toFixed(decimalPlaces);
+    }
+
+    updateAll();
+    setInterval(updateAll, 1000); // Refresh every second for real-time updates
+</script>
+
+</body>
+</html>
