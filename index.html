@@ -302,7 +302,7 @@
         document.getElementById('percentageCompleted').innerText = `${texts[currentLanguage].percentageCompleted}${percentageDisplay}%`;
 
         const remainingMs = endDate - now;
-        const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+        const days = Math.floor((remainingMs / (1000 * 60 * 60 * 24)) - 1);
         const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
