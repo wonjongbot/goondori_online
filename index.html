@@ -135,10 +135,10 @@
         <label for="startDateInput" id="startDate">Start Date:</label>
         <input type="date" id="startDateInput">
     </div>
-    <div class="settings-field">
+    <!-- <div class="settings-field">
         <label for="endDateInput" id="endDate">End Date:</label>
         <input type="date" id="endDateInput">
-    </div>
+    </div>-->
     <div class="settings-field">
         <label for="languageSelector" id="lang">Language:</label>
         <select id="languageSelector">
@@ -154,6 +154,7 @@
 
 <div class="container">
     <h1 id="headerTitle">Pedro's Military Service Tracker</h1>
+    <div class="info" id="dischargeDateDisplay">Discharge Date: Calculating...</div>
     <div class="info" id="totalDays">Total Service Duration: Calculating...</div>
     <div class="info" id="daysRemaining">Days Remaining: Calculating...</div>
     <div class="info" id="percentageCompleted">Percentage Completed: Calculating...</div>
@@ -226,7 +227,7 @@
 
     let currentLanguage = 'en';
     let startDate = new Date('2023-09-18T08:30:00');
-    let endDate = new Date('2025-03-17T08:30:00');
+    let endDate = new Date('2025-03-18T08:30:00');
 
     function getDateWithTime(dateString) {
         return new Date(`${dateString}T08:30:00`);
@@ -246,7 +247,7 @@
 
         // Set default values for start and end dates
         startDateInput.value = formatDateToInput(startDate);
-        endDateInput.value = formatDateToInput(endDate);
+        //endDateInput.value = formatDateToInput(endDate);
 
         // Set default language
         languageSelector.value = currentLanguage;
@@ -255,7 +256,7 @@
     function updateText() {
         document.getElementById('settings').innerText = texts[currentLanguage].settings;
         document.getElementById('startDate').innerText = texts[currentLanguage].startDate;
-        document.getElementById('endDate').innerText = texts[currentLanguage].endDate;
+        //document.getElementById('endDate').innerText = texts[currentLanguage].endDate;
         document.getElementById('lang').innerText = texts[currentLanguage].lang;
 
         document.getElementById('headerTitle').innerText = texts[currentLanguage].headerTitle;
@@ -276,6 +277,19 @@
         const totalMilliseconds = end - start;
         const elapsedMilliseconds = now - start;
         return (elapsedMilliseconds / totalMilliseconds) * 100;
+    }
+
+    function calculateDischargeDate(startDate) {
+        const dischargeDate = new Date(startDate);
+        dischargeDate.setMonth(dischargeDate.getMonth() + 18); // Add 1.5 years
+        endDate = new Date(dischargeDate)
+        const ret = new Date(dischargeDate)
+        ret.setDate(ret.getDate() - 1);
+        return ret;
+    }
+    function updateDischargeDate() {
+    dischargeDate = calculateDischargeDate(startDate);
+    document.getElementById('dischargeDateDisplay').innerText = `${texts[currentLanguage].endDate}: ${dischargeDate.toLocaleDateString()}`;
     }
 
     function updateProgressBar() {
@@ -327,11 +341,14 @@
 
     document.getElementById('saveSettings').addEventListener('click', () => {
         const newStartDate = document.getElementById('startDateInput').value;
-        const newEndDate = document.getElementById('endDateInput').value;
+        //const newEndDate = document.getElementById('endDateInput').value;
         const newLanguage = document.getElementById('languageSelector').value;
 
-        if (newStartDate) startDate = getDateWithTime(newStartDate);
-        if (newEndDate) endDate = getDateWithTime(newEndDate);
+        if (newStartDate){
+            startDate = getDateWithTime(newStartDate);
+            updateDischargeDate();
+        }
+        //if (newEndDate) endDate = getDateWithTime(newEndDate);
         if (newLanguage) currentLanguage = newLanguage;
 
         document.getElementById('settingsModal').style.display = 'none';
@@ -356,6 +373,7 @@
     }
     setDefaultInputValues();
     detectLanguage();
+    updateDischargeDate();
     updateAll();
     setInterval(updateAll, 1000); // Refresh every second for real-time updates
 </script>
