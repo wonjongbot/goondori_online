@@ -291,6 +291,17 @@
         return num.toFixed(decimalPlaces);
     }
 
+    // Detect the user's preferred language
+    function detectLanguage() {
+        const browserLanguage = navigator.language || navigator.userLanguage; // Get browser language
+        if (browserLanguage.startsWith('en')) {
+            currentLanguage = 'en'; // Set to English if the browser language is English
+        } else {
+            currentLanguage = 'ko'; // Default to Korean for other languages
+        }
+        updateText(); // Update the interface to the detected language
+    }
+    detectLanguage();
     updateAll();
     setInterval(updateAll, 1000); // Refresh every second for real-time updates
 </script>
