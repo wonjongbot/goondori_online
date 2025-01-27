@@ -274,7 +274,7 @@
     }
 
     function calculatePercentage(start, now, end) {
-        const totalMilliseconds = end - start;
+        const totalMilliseconds = end - start - (1000 * 60 * 60 * 24) - 9.33 * (1000 * 60 * 60);
         const elapsedMilliseconds = now - start;
         return (elapsedMilliseconds / totalMilliseconds) * 100;
     }
