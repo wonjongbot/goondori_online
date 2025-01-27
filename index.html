@@ -308,11 +308,26 @@
         const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
         document.getElementById('additionalInfo').innerText = `${texts[currentLanguage].additionalInfo}${days} ${units[currentLanguage].days}, ${hours} ${units[currentLanguage].hours}, ${minutes} ${units[currentLanguage].minutes}, ${seconds} ${units[currentLanguage].seconds}`;
     }
+    
+    function getWorkdaysLeft(){
+        let today = new Date();
+        let workdaysCount = 0;
+
+        while(today <= endDate){
+            let dayOfWeek = today.getDay();
+            
+            if(dayOfWeek !== 0 && dayOfWeek !== 6){
+                workdaysCount++;
+            }
+            today.setDate(today.getDate()+1);
+        }
+        return workdaysCount;
+    }
 
     function updateStats() {
         const daysRemaining = Math.floor(calculateDaysRemaining());
         const mealsLeft = daysRemaining * 3; // Assuming 3 meals per day
-        const workdaysLeft = daysRemaining; // Every day is a workday
+        const workdaysLeft = getWorkdaysLeft(); // mon-fri is a workday
         const cctvShiftsLeft = Math.ceil(daysRemaining / 5); // CCTV shifts approximately every 5 days
 
         document.getElementById('mealsLeft').innerText = `${texts[currentLanguage].mealsLeft}${mealsLeft}`;
