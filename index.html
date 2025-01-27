@@ -124,6 +124,42 @@
         button:hover {
             background-color: #45a049;
         }
+
+        .vacation-section {
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        #vacationDatesList {
+            max-height: 150px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .vacation-date-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            margin: 3px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .remove-vacation {
+            color: #ff4444;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        #vacationDateInput {
+            margin-top: 5px;
+        }
+        .vacation-range-picker {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .vacation-range-picker input {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -146,6 +182,19 @@
             <option value="ko">한국어</option>
         </select>
     </div>
+
+    <div class="vacation-section">
+        <label id="vacationLabel">Vacation Range:</label>
+        <div class="vacation-range-picker">
+            <input type="date" id="vacationStartDate" placeholder="Start">
+            <span>–</span>
+            <input type="date" id="vacationEndDate" placeholder="End">
+        </div>
+        <button id="addVacationRange" style="margin-top: 5px; width: auto;">Add Range</button>
+        <div id="vacationDatesList"></div>
+        <small id="vacationCounter" style="display: block; margin-top: 5px;"></small>
+    </div>
+
     <button id="saveSettings">Save</button>
     <button id="closeSettings">Cancel</button>
 </div>
@@ -192,7 +241,16 @@
             additionalInfo: "Time Remaining: ",
             mealsLeft: "Meals Left: ",
             workdaysLeft: "Workdays Left: ",
-            cctvShiftsLeft: "CCTV Shifts Left: "
+            cctvShiftsLeft: "CCTV Shifts Left: ",
+            vacationLabel: "Vacation Days:",
+            addRange: "Add Dates",
+            invalidRange: "End date must be after start date",
+            dateAdded: "days added",
+            dateExists: "days already existed",
+            addVacation: "Add",
+            remove: "Remove",
+            vacationLimit: "Maximum 30 vacation days allowed",
+            selectedVacation: "Selected vacation days:"
         },
         ko: {
             settings: "설정",
@@ -206,7 +264,16 @@
             additionalInfo: "남은 시간: ",
             mealsLeft: "남은 식사: ",
             workdaysLeft: "남은 일과일: ",
-            cctvShiftsLeft: "남은 CCTV 근무: "
+            cctvShiftsLeft: "남은 CCTV 근무: ",
+            vacationLabel: "휴가 일자:",
+            addRange: "추가",
+            invalidRange: "종료일은 시작일 이후여야 합니다",
+            dateAdded: "일 추가됨",
+            dateExists: "일 이미 존재함",
+            addVacation: "추가",
+            remove: "삭제",
+            vacationLimit: "최대 30개의 휴가 일자를 선택할 수 있습니다",
+            selectedVacation: "선택된 휴가 일자:"
         }
     };
 
@@ -228,6 +295,45 @@
     let currentLanguage = 'en';
     let startDate = new Date('2023-09-18T08:30:00');
     let endDate = new Date('2025-03-18T08:30:00');
+    let vacationDays = [
+    "2025-01-27",
+    "2025-01-28",
+    "2025-01-29",
+    "2025-01-30",
+    "2025-01-31",
+    "2025-02-10",
+    "2025-02-11",
+    "2025-02-12",
+    "2025-02-13",
+    "2025-02-14",
+    "2025-02-17",
+    "2025-02-18",
+    "2025-02-19",
+    "2025-02-20",
+    "2025-02-21",
+    "2025-02-22",
+    "2025-02-23",
+    "2025-02-24",
+    "2025-02-25",
+    "2025-02-26",
+    "2025-02-27",
+    "2025-02-28",
+    "2025-03-03",
+    "2025-03-04",
+    "2025-03-05",
+    "2025-03-06",
+    "2025-03-07",
+    "2025-03-08",
+    "2025-03-09",
+    "2025-03-10",
+    "2025-03-11",
+    "2025-03-12",
+    "2025-03-13",
+    "2025-03-14"
+]
+
+    //let vacationDays = JSON.parse(localStorage.getItem('vacationDays') || '[]');
+    const MAX_VACATION_DAYS = 70;
 
     function getDateWithTime(dateString) {
         return new Date(`${dateString}T08:30:00`);
@@ -263,6 +369,9 @@
         document.getElementById('totalDays').innerText = texts[currentLanguage].totalDays + calculateTotalDays() + ` ${units[currentLanguage].days}`;
         document.getElementById('daysRemaining').innerText = texts[currentLanguage].daysRemaining + Math.floor(calculateDaysRemaining()) + ` ${units[currentLanguage].days}`;
         document.getElementById('lastUpdated').innerText = new Date().toLocaleString();
+        
+        document.getElementById('addVacationRange').innerText = texts[currentLanguage].addRange;
+        document.getElementById('vacationLabel').innerText = texts[currentLanguage].vacationLabel;
     }
 
     function calculateTotalDays() {
@@ -308,18 +417,111 @@
         const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
         document.getElementById('additionalInfo').innerText = `${texts[currentLanguage].additionalInfo}${days} ${units[currentLanguage].days}, ${hours} ${units[currentLanguage].hours}, ${minutes} ${units[currentLanguage].minutes}, ${seconds} ${units[currentLanguage].seconds}`;
     }
+
+    function getDatesInRange(startDate, endDate) {
+        const dates = [];
+        const current = new Date(startDate);
+        const end = new Date(endDate);
+        
+        while (current <= end) {
+            dates.push(formatDate(current));
+            current.setDate(current.getDate() + 1);
+        }
+        return dates;
+    }
     
-    function getWorkdaysLeft(){
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function updateVacationDisplay() {
+        const list = document.getElementById('vacationDatesList');
+        list.innerHTML = vacationDays.map(date => `
+            <div class="vacation-date-item">
+                ${date}
+                <span class="remove-vacation" onclick="removeVacationDate('${date}')">
+                    ${texts[currentLanguage].remove}
+                </span>
+            </div>
+        `).join('');
+        
+        document.getElementById('vacationCounter').textContent = 
+            `${texts[currentLanguage].selectedVacation} ${vacationDays.length}/${MAX_VACATION_DAYS}`;
+    }
+
+    function addVacationDate(dateString) {
+        if (vacationDays.length >= MAX_VACATION_DAYS) {
+            alert(texts[currentLanguage].vacationLimit);
+            return;
+        }
+        if (!vacationDays.includes(dateString)) {
+            vacationDays.push(dateString);
+            vacationDays.sort();
+            updateVacationDisplay();
+        }
+    }
+
+    function removeVacationDate(dateString) {
+        vacationDays = vacationDays.filter(d => d !== dateString);
+        updateVacationDisplay();
+    }
+
+    document.getElementById('addVacationRange').addEventListener('click', () => {
+        const startInput = document.getElementById('vacationStartDate');
+        const endInput = document.getElementById('vacationEndDate');
+        
+        if (!startInput.value || !endInput.value) return;
+        if (new Date(startInput.value) > new Date(endInput.value)) {
+            alert(texts[currentLanguage].invalidRange);
+            return;
+        }
+
+        const newDates = getDatesInRange(startInput.value, endInput.value);
+        const existingDates = new Set(vacationDays);
+        let availableSlots = MAX_VACATION_DAYS - vacationDays.length;
+        
+        let added = 0, existed = 0;
+        
+        for (const date of newDates) {
+            if (availableSlots <= 0) break;
+            if (!existingDates.has(date)) {
+                vacationDays.push(date);
+                existingDates.add(date);
+                added++;
+                availableSlots--;
+            } else {
+                existed++;
+            }
+        }
+
+        // Show feedback
+        let message = [];
+        if (added > 0) message.push(`${added} ${texts[currentLanguage].dateAdded}`);
+        if (existed > 0) message.push(`${existed} ${texts[currentLanguage].dateExists}`);
+        if (message.length > 0) alert(message.join('\n'));
+
+        vacationDays.sort();
+        updateVacationDisplay();
+        startInput.value = '';
+        endInput.value = '';
+    });
+    
+    function getWorkdaysLeft() {
         let today = new Date();
         let workdaysCount = 0;
+        const vacationSet = new Set(vacationDays);
 
-        while(today <= endDate){
-            let dayOfWeek = today.getDay();
+        while(today <= endDate) {
+            const dateString = today.toISOString().split('T')[0];
+            const isWeekend = today.getDay() === 0 || today.getDay() === 6;
             
-            if(dayOfWeek !== 0 && dayOfWeek !== 6){
+            if (!isWeekend && !vacationSet.has(dateString)) {
                 workdaysCount++;
             }
-            today.setDate(today.getDate()+1);
+            today.setDate(today.getDate() + 1);
         }
         return workdaysCount;
     }
@@ -344,10 +546,11 @@
 
 
     document.getElementById('settingsIcon').addEventListener('click', () => {
-        setDefaultInputValues(); // Correctly set default values
+        setDefaultInputValues();
+        updateVacationDisplay(); // Add this line
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
-    }); 
+    });
 
     document.getElementById('closeSettings').addEventListener('click', () => {
         document.getElementById('settingsModal').style.display = 'none';
@@ -369,6 +572,8 @@
         document.getElementById('settingsModal').style.display = 'none';
         document.getElementById('overlay').style.display = 'none';
 
+        localStorage.setItem('vacationDays', JSON.stringify(vacationDays));
+
         updateText(); // Update the text immediately
     });
 
@@ -386,11 +591,17 @@
         }
         updateText(); // Update the interface to the detected language
     }
+
     setDefaultInputValues();
     detectLanguage();
     updateDischargeDate();
     updateAll();
     setInterval(updateAll, 1000); // Refresh every second for real-time updates
+
+    window.addEventListener('load', () => {
+        const savedVacation = localStorage.getItem('vacationDays');
+        if (savedVacation) vacationDays = JSON.parse(savedVacation);
+    });
 </script>
 
 </body>
